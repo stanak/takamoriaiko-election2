@@ -17,7 +17,7 @@
       </div>
     </div>
     <div class="position-center">
-      <el-button type="primary" @click="$router.push(-1)">
+      <el-button type="primary" @click="$router.go(-1)">
         OK
       </el-button>
     </div>
