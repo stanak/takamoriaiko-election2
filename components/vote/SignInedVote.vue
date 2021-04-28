@@ -9,19 +9,19 @@
         />
         <div class="card-text-interval">
           <div class="card-text">
-            <span class="vote-num">{{ (epName in allVote[times]) ? allVote[times][epName] : 0 }}票投票済み</span>
+            <span class="vote-num">{{ (epName in vote) ? vote[epName] : 0 }}票投票済み</span>
             {{ episodesENJP[epName] }}
           </div>
         </div>
       </el-card>
     </div>
-    <div v-if="isLimit(allVote[times])" class="position-center-text">
+    <div v-if="isLimit(vote)" class="position-center-text">
       投票上限です。<br>ログインボーナスで投票券を増やすか、リセットで再び投票できます。
     </div>
     <div v-else class="position-center-text">
       <el-form :inline="true">
         <el-form-item label="投票券枚数">
-          <el-input-number v-model="voteNum" :min="1" :max="remainingTicketNum(allVote[times])" />
+          <el-input-number v-model="voteNum" :min="1" :max="remainingTicketNum(vote)" />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" round class="button-design" @click="handleVote()">
@@ -31,12 +31,14 @@
       </el-form>
     </div>
     <div class="position-center-text">
-      残り持ち票{{ remainingTicketNum(allVote[times]) }}
+      残り持ち票{{ remainingTicketNum(vote) }}
     </div>
     <div class="position-center-text">
-      <el-button round type="primary" @click="twitterShare()">
-        ツイート
-      </el-button>
+      <a :href="twitterShareURL()" target="_blank" rel="noopener noreferrer">
+        <el-button round type="primary">
+          ツイート
+        </el-button>
+      </a>
     </div>
     <div class="top-padding position-center-text">
       <el-button round type="warning" @click="handleClearVote()">
@@ -48,7 +50,7 @@
 
 <script>
 import episode from '@/assets/javascripts/episode'
-import { mapGetters, mapActions } from 'vuex'
+import { mapGetters } from 'vuex'
 
 const countVote = (obj) => {
   Object.entries(obj).reduce((a, b) => { return a + b[1] }, 0)
@@ -58,6 +60,7 @@ export default {
   data () {
     return {
       times: 0,
+      ticketNum: 0,
       vote: {},
       voteNum: 1,
       epName: '',
@@ -67,9 +70,7 @@ export default {
   computed: {
     ...mapGetters({
       isSignedIn: 'user/isSignedIn',
-      twitterIdStr: 'user/twitterIdStr',
-      allVote: 'user/allVote',
-      ticketNum: 'user/ticketNum'
+      twitterIdStr: 'user/twitterIdStr'
     }),
     remainingTicketNum () {
       return function (vote) {
@@ -84,22 +85,19 @@ export default {
       }
     }
   },
-  async created () {
+  async mounted () {
     this.epName = this.$route.params.epName
     this.times = Number(this.$route.params.times)
 
     const vote = await this.$getFirestore(this, 'vote', this.times)
+    if (vote === null) {
+      await this.initializeVote()
+    }
     this.vote = vote ? vote.targets : {}
-    this.updateVote({ times: this.times, vote: this.vote })
     const ticketData = await this.$getFirestore(this, 'ticket', this.times)
-    const ticketNum = ticketData ? ticketData.number : 0
-    this.updateTicketNum(ticketNum)
+    this.ticketNum = ticketData ? ticketData.number : 0
   },
   methods: {
-    ...mapActions('user', [
-      'updateTicketNum',
-      'updateVote'
-    ]),
     handleVote () {
       this.$confirm(`${this.episodesENJP[this.epName]}に${this.voteNum}票投票しますか？`, 'Warning', {
         confirmButtonText: 'OK',
@@ -107,7 +105,7 @@ export default {
         type: 'info'
       }).then(async () => {
         try {
-          await this.addAndUpdateVote()
+          await this.updateVote()
           await this.$message({
             type: 'success',
             message: '投票成功。'
@@ -125,33 +123,33 @@ export default {
         })
       })
     },
-    async addAndUpdateVote () {
+    async updateVote () {
       const voteData = await this.$getFirestore(this, 'vote', this.times)
+      const newVote = voteData.targets
       const ticketData = await this.$getFirestore(this, 'ticket', this.times)
       const ticketNum = ticketData.number
       if (this.voteNum > ticketNum) {
         throw new Error('投票数が投票券総数より多いです')
       }
-      if (!voteData) {
-        const newVote = {
-          times: this.times,
-          twitter_id_str: this.$store.getters['user/twitterIdStr'],
-          targets: { [this.epName]: this.voteNum }
-        }
-        await this.$addFirestore('vote', newVote)
-        return
-      }
-      const targets = voteData.targets
-      if (countVote(targets) > ticketNum) {
+      if ((countVote(this.vote) + this.voteNum) > ticketNum) {
         throw new Error('総投票数が投票券総数より多いです')
       }
-      if (this.epName in targets) {
-        targets[this.epName] += this.voteNum
+      if (this.epName in newVote) {
+        newVote[this.epName] += this.voteNum
       } else {
-        targets[this.epName] = this.voteNum
+        newVote[this.epName] = this.voteNum
       }
-      const updated = await this.$updateFirestore(this, 'vote', this.times, { targets })
-      this.updateVote({ times: this.times, vote: updated.targets })
+      try {
+        const updated = await this.$updateFirestore(this, 'vote', this.times, { targets: newVote })
+        this.newVote = updated.targets
+        this.vote = newVote
+        // this.updateVote({ times: this.times, vote:  })
+      } catch (e) {
+        await this.$message({
+          type: 'danger',
+          message: `投票更新失敗${e}`
+        })
+      }
     },
     handleClearVote () {
       this.$confirm(`${this.episodesENJP[this.epName]}の投票をリセットしますか？`, 'Warning', {
@@ -178,6 +176,24 @@ export default {
         })
       })
     },
+    async initializeVote () {
+      const newVote = { [this.epName]: 0 }
+
+      const newData = {
+        times: this.times,
+        twitter_id_str: this.$store.getters['user/twitterIdStr'],
+        targets: newVote
+      }
+      try {
+        await this.$addFirestore('vote', newData)
+        this.vote = newVote
+      } catch (e) {
+        await this.$message({
+          type: 'danger',
+          message: `初期投票失敗${e}`
+        })
+      }
+    },
     async clearVote () {
       const data = await this.$getFirestore(this, 'vote', this.times)
       if (!data) {
@@ -192,10 +208,12 @@ export default {
       const targets = data.targets
       targets[this.epName] = 0
       const updated = await this.$updateFirestore(this, 'vote', this.times, { targets })
-      this.updateVote({ times: this.times, vote: updated.targets })
+      this.vote = updated.targets
+      // this.updateVote({ times: this.times, vote: updated.targets })
     },
-    twitterShare () {
-      window.open('http://twitter.com/share?text=' + encodeURIComponent(this.$episodes[this.epName] + 'に投票しました！\n皆も好きな藍子に投票しよう！\n#藍子ちゃん総選挙20' + (20 + this.times - 1) + '\n#第' + (9 - 1 + this.times) + '回シンデレラガール総選挙\n') + '&url=' + encodeURIComponent(location.href), 'sharewindow', 'width=550, height=450, personalbar=0, toolbar=0, scrollbars=1, resizable=!')
+    twitterShareURL () {
+      const encodedText = encodeURIComponent(`${this.episodesENJP[this.epName]}に投票しました！\n皆も好きな藍子に投票しよう！\n#藍子ちゃん総選挙${2020 + this.times - 1}\n#第${9 - 1 + this.times}回シンデレラガール総選挙\n`)
+      return `http://twitter.com/share?text=${encodedText}&url=${encodeURIComponent(location.href)}`
     }
   }
 }

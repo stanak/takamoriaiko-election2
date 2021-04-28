@@ -1,9 +1,3 @@
-import settings from '@/assets/javascripts/settings'
-
-const initialAllVote = () => {
-  const timesEpisodeCount = Array.from(Array(settings.times), (v, k) => [k + 1, {}])
-  return Object.fromEntries(timesEpisodeCount)
-}
 
 const loginBonus = async (app, twitterIdStr, redirect) => {
   const router = app.$router
@@ -17,9 +11,7 @@ const loginBonus = async (app, twitterIdStr, redirect) => {
 export const state = () => ({
   isSignedIn: false,
   twitterIdStr: null,
-  twitterScreenName: null,
-  allVote: initialAllVote(),
-  ticketNum: 0
+  twitterScreenName: null
 })
 
 export const mutations = {
@@ -31,12 +23,6 @@ export const mutations = {
   },
   setTwitterScreenName (state, twitterScreenName) {
     state.twitterScreenName = twitterScreenName
-  },
-  setVote (state, { times, vote }) {
-    state.allVote[times] = vote
-  },
-  setTicketNum (state, num) {
-    state.ticketNum = num
   }
 }
 
@@ -49,12 +35,6 @@ export const actions = {
     await this.$twitterSignOut()
     commit('setSignInState', false)
   },
-  updateVote ({ commit }, { times, vote }) {
-    commit('setVote', { times, vote })
-  },
-  updateTicketNum ({ commit }, ticketNum) {
-    commit('setTicketNum', ticketNum)
-  },
   onAuth (context) {
     const { commit } = context
     this.$firebase.auth().onAuthStateChanged(async (user) => {
@@ -66,6 +46,7 @@ export const actions = {
         commit('setSignInState', true)
         commit('setTwitterIdStr', twitterIdStr)
         commit('setTwitterScreenName', twitterScreenName)
+        return
       }
       if (user) {
         commit('setSignInState', true)
@@ -85,11 +66,5 @@ export const getters = {
   },
   twitterScreenName: (state) => {
     return state.twitterScreenName
-  },
-  allVote: (state) => {
-    return state.allVote
-  },
-  ticketNum: (state) => {
-    return state.ticketNum
   }
 }

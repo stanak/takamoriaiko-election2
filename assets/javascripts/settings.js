@@ -7,8 +7,8 @@ export default {
       end: new Date(2020, 4, 11)
     },
     {
-      start: new Date(2021, 3, 24),
-      end: new Date(2021, 4, 15, 15)
+      start: new Date(2021, 3, 28),
+      end: new Date(2021, 4, 15, 19)
     }
   ]
 }

@@ -1,36 +1,48 @@
 <template>
-  <div v-masonry transition-duration="0.3s" item-selector=".item">
-    <div v-masonry-tile class="item" v-for="(jpName, epName, index) in episodesENJP" :key="index">
-      <nuxt-link :to="`/vote/${times}/${epName}`">
-        <div class="card-interval">
-          <el-card :body-style="{ padding: '0px' }" class="card relative w-xs">
-            <el-image
-              style="height: 12rem; width: 100%;"
-              :src="`/${epName}.jpg`"
-              fit="contain" />
-            <div class="card-text-interval">
-              <div class="card-text">
-                <div v-if="epName in vote" class="absolute lower-right text-lg">
-                  <i class="el-icon-star-off"></i>
-                  {{ vote[epName] }}
+  <div>
+    <div v-if=isSignedIn>
+      所持している総投票券枚数: {{ ticket }}
+    </div>
+    <div v-masonry transition-duration="0.3s" item-selector=".item">
+      <div v-masonry-tile class="item" v-for="(jpName, epName, index) in episodesENJP" :key="index">
+        <nuxt-link :to="`/vote/${times}/${epName}`">
+          <div class="card-interval">
+            <el-card :body-style="{ padding: '0px' }" class="card relative w-xs">
+              <el-image
+                style="height: 12rem; width: 100%;"
+                :src="`/${epName}.jpg`"
+                fit="contain" />
+              <div class="card-text-interval">
+                <div class="card-text">
+                  <div v-if="isSignedIn && epName in vote" class="absolute lower-right text-lg">
+                    <i class="el-icon-star-off"></i>
+                    {{ vote[epName] }}
+                  </div>
+                  {{jpName}}
                 </div>
-                {{jpName}}
               </div>
-            </div>
-          </el-card>
-        </div>
-      </nuxt-link>
+            </el-card>
+          </div>
+        </nuxt-link>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
 import episode from '@/assets/javascripts/episode'
+import { mapGetters } from 'vuex'
 
 export default {
+  computed: {
+    ...mapGetters({
+      isSignedIn: 'user/isSignedIn'
+    })
+  },
   data ({ params }) {
     return {
       vote: {},
+      ticket: 0,
       episodesENJP: episode.episodesENJP
     }
   },
@@ -38,8 +50,13 @@ export default {
     times: Number
   },
   async mounted () {
+    if (!this.isSignedIn) {
+      return
+    }
     const vote = await this.$getFirestore(this, 'vote', this.times)
     this.vote = vote ? vote.targets : {}
+    const ticket = await this.$getFirestore(this, 'ticket', this.times)
+    this.ticket = ticket ? ticket.number : 0
   }
 }
 </script>

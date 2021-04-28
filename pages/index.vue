@@ -27,6 +27,8 @@
       <li>
         イベント終了前に教えてくれる高森藍子Bot:<a href="https://twitter.com/takamoreminder" target="_blank" rel="noopener noreferrer">@takamoreminder</a>
       </li>
+      上記Botは以下のキャンペーンの集計もしています。
+      <el-image src="/kokuti.jpg" style="height: 16rem; width: 100%;" fit="contain" />
     </ul>
 
     <h2>管理者・問合せ先情報</h2>
@@ -36,7 +38,7 @@
     <ul>
       2021
       <li>
-        全面的にソースコードを書き換えてリニューアルしました。ダイマ機能は一時凍結。票の取得方法が毎日のログインで行われるようになりました。
+        4/28: 全面的にソースコードを書き換えてリニューアルしました。ダイマ機能は一時凍結。票の取得方法が毎日のログインで行われるようになりました。
       </li>
     </ul>
 
