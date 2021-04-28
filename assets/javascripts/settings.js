@@ -1,5 +1,6 @@
 // timesを増やすことで各回の選挙ページが生成され、期間も設定するといい感じになる。
 export default {
+  version: 2,
   times: 2,
   schedule: [
     {

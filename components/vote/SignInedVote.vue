@@ -85,7 +85,7 @@ export default {
       }
     }
   },
-  async mounted () {
+  async created () {
     this.epName = this.$route.params.epName
     this.times = Number(this.$route.params.times)
 
@@ -128,6 +128,9 @@ export default {
       const newVote = voteData.targets
       const ticketData = await this.$getFirestore(this, 'ticket', this.times)
       const ticketNum = ticketData.number
+      if (!this.voteNum || (typeof this.voteNum) !== 'number') {
+        throw new Error('入力値が不正です')
+      }
       if (this.voteNum > ticketNum) {
         throw new Error('投票数が投票券総数より多いです')
       }
@@ -143,7 +146,6 @@ export default {
         const updated = await this.$updateFirestore(this, 'vote', this.times, { targets: newVote })
         this.newVote = updated.targets
         this.vote = newVote
-        // this.updateVote({ times: this.times, vote:  })
       } catch (e) {
         await this.$message({
           type: 'danger',
@@ -209,7 +211,6 @@ export default {
       targets[this.epName] = 0
       const updated = await this.$updateFirestore(this, 'vote', this.times, { targets })
       this.vote = updated.targets
-      // this.updateVote({ times: this.times, vote: updated.targets })
     },
     twitterShareURL () {
       const encodedText = encodeURIComponent(`${this.episodesENJP[this.epName]}に投票しました！\n皆も好きな藍子に投票しよう！\n#藍子ちゃん総選挙${2020 + this.times - 1}\n#第${9 - 1 + this.times}回シンデレラガール総選挙\n`)

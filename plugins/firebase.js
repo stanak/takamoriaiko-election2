@@ -45,7 +45,7 @@ const checkLoginBonus = async (twitterIdStr) => {
     return true
   }
   // 該当あればlast_timeをnowに更新
-  const doc = querySnapshot.docs[queryNum - 1]
+  const doc = querySnapshot.docs[0]
   const lastTime = doc.data().last_time.toDate()
   await Firebase.firestore().collection('timestamp').doc(doc.id).update({ last_time: now })
   // 今が選挙期間内で日が変わってたらtrue, それ以外false
@@ -69,7 +69,7 @@ const increaseVotingTicket = async (twitterIdStr) => {
       })
       return
     }
-    const doc = querySnapshot.docs[queryNum - 1]
+    const doc = querySnapshot.docs[0]
     const number = doc.data().number + 10
     await Firebase.firestore().collection('ticket').doc(doc.id).update({ number })
   })
@@ -84,8 +84,8 @@ const getFirestore = async (context, collection, times) => {
   if (queryNum === 0) {
     return null
   }
-  // あったら最後にヒットしたデータを返す(1つの前提)
-  const doc = querySnapshot.docs[queryNum - 1]
+  // あったら最初にヒットしたデータを返す(1つの前提)
+  const doc = querySnapshot.docs[0]
   return doc.data()
 }
 
@@ -103,8 +103,8 @@ const updateFirestore = async (context, collection, times, updateData) => {
   if (queryNum === 0) {
     return null
   }
-  // あったらupdateして最後にヒットしたデータを返す(1つの前提)
-  let doc = querySnapshot.docs[queryNum - 1]
+  // あったらupdateして最初にヒットしたデータを返す(1つの前提)
+  let doc = querySnapshot.docs[0]
   await Firebase.firestore().collection(collection).doc(doc.id).update(updateData)
   doc = await Firebase.firestore().collection(collection).doc(doc.id).get()
   return doc.data()
