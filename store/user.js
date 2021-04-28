@@ -1,5 +1,8 @@
 
 const loginBonus = async (app, twitterIdStr, redirect) => {
+  if (!twitterIdStr) {
+    return
+  }
   const router = app.$router
   if (await app.$checkLoginBonus(twitterIdStr)) {
     await app.$increaseVotingTicket(twitterIdStr)
