@@ -22,7 +22,16 @@
       <el-button type="primary" round class="button-design" @click="doSignIn">
         ログインして投票
       </el-button>
+      </nuxt-link>
     </div>
+    <div class="top-padding position-center-text">
+      <nuxt-link :to="`/vote/${times}`">
+        <el-button round>
+          投票候補一覧へ戻る
+        </el-button>
+      </nuxt-link>
+    </div>
+
   </div>
 </template>
 
@@ -64,6 +73,9 @@ export default {
 </script>
 
 <style scoped>
+.top-padding {
+  padding-top: 1rem;
+}
 .position-center {
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;

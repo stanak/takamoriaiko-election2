@@ -151,8 +151,9 @@ export default {
     handleVote () {
       this.$confirm(`${this.episodesENJP[this.epName]}に${this.voteNum}票投票しますか？`, 'Warning', {
         confirmButtonText: 'OK',
-        cancelButtonText: 'Cancel',
-        type: 'info'
+        cancelButtonText: 'No',
+        type: 'info',
+        center: true
       }).then(async () => {
         try {
           await this.updateVote()
@@ -205,9 +206,10 @@ export default {
     },
     handleClearVote () {
       this.$confirm(`${this.episodesENJP[this.epName]}の投票をリセットしますか？`, 'Warning', {
-        confirmButtonText: 'OK',
-        cancelButtonText: 'Cancel',
-        type: 'warning'
+        confirmButtonText: 'Yes',
+        cancelButtonText: 'No',
+        type: 'warning',
+        center: true
       }).then(async () => {
         try {
           await this.clearVote()

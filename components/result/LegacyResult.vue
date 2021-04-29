@@ -4,7 +4,8 @@
   </div>
   <div v-else>
     <div class="font-bold text-xl">
-      藍子ちゃん総選挙20{{ times - 1 + 20 }}結果
+      藍子ちゃん総選挙20{{ times - 1 + 20 }}結果<br>
+      開催期間 {{ inTermMessage() }}
     </div>
     <br>
     このときは一人5票のみが与えられ、1エピソードには1票まで、最大5エピソード投票できました。<br>
@@ -116,7 +117,8 @@ export default {
       counter: {},
       ranking: {},
       restrictedSortedEpisodes: [],
-      endDate: new Date(),
+      start: new Date(),
+      end: new Date(),
       episodesENJP: episode.episodesENJP
     }
   },
@@ -128,9 +130,11 @@ export default {
     }
   },
   async created () {
+    this.time = 1 // 固定値
+    this.start = settings.schedule[this.times - 1].start
+    this.end = settings.schedule[this.times - 1].end
     const episodes = episode.episodes
-    const endDate = settings.schedule[this.times - 1].end
-    const restrictedEpisodes = getRestrictedEpisodes(episodes, endDate)
+    const restrictedEpisodes = getRestrictedEpisodes(episodes, this.end)
     this.allVoteList = await getAllVote(this, this.times)
     this.counter = getCounter(restrictedEpisodes, this.allVoteList)
     this.restrictedSortedEpisodes = getRestrictedSortedEpisodes(restrictedEpisodes, this.counter)
@@ -143,6 +147,17 @@ export default {
     },
     top3Num () {
       return this.restrictedSortedEpisodes.filter((ep) => { return this.ranking[ep] in [1, 2, 3] })
+    },
+    inTermMessage () {
+      const sYear = this.start.getFullYear()
+      const sMonth = this.start.getMonth() + 1
+      const sDate = this.start.getDate()
+      const sHour = this.start.getHours()
+      const eYear = this.end.getFullYear()
+      const eMonth = this.end.getMonth() + 1
+      const eDate = this.end.getDate()
+      const eHour = this.end.getHours()
+      return `${sYear}年${sMonth}月${sDate}日${sHour}時～${eYear}年${eMonth}月${eDate}日${eHour}時`
     }
   }
 }

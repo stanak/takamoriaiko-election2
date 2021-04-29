@@ -4,7 +4,7 @@
   </div>
   <div v-else>
     <div v-if="inTerm()">
-      {{ inTermMessage() }}
+      開催日時:{{ inTermMessage() }}
     </div>
   </div>
 </template>
@@ -35,10 +35,12 @@ export default {
       const sYear = this.start.getFullYear()
       const sMonth = this.start.getMonth() + 1
       const sDate = this.start.getDate()
+      const sHour = this.start.getHours()
       const eYear = this.end.getFullYear()
       const eMonth = this.end.getMonth() + 1
       const eDate = this.end.getDate()
-      return `開催日時：${sYear}年${sMonth}月${sDate}日～${eYear}年${eMonth}月${eDate}日`
+      const eHour = this.end.getHours()
+      return `${sYear}年${sMonth}月${sDate}日${sHour}時～${eYear}年${eMonth}月${eDate}日${eHour}時`
     }
   }
 }
