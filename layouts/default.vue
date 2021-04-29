@@ -34,9 +34,6 @@
       <el-menu-item v-if="isSignedIn" index="4" @click="doSignOut()">
         ログアウト
       </el-menu-item>
-      <el-menu-item v-if="!isSignedIn" index="4" @click="doSignIn()">
-        ログイン
-      </el-menu-item>
     </el-menu>
     <Nuxt class="margin-top padding" />
   </div>
@@ -65,14 +62,10 @@ export default {
       return `/result/${parseInt(times)}`
     },
     ...mapActions('user', [
-      'signOut',
-      'signIn'
+      'signOut'
     ]),
     async doSignOut () {
       await this.signOut()
-    },
-    async doSignIn () {
-      await this.signIn()
     }
   }
 }

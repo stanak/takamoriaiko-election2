@@ -105,6 +105,7 @@ export default {
     this.epName = this.$route.params.epName
   },
   async mounted () {
+    let firstFlag = false
     this.times = Number(this.$route.params.times)
 
     let vote = await this.$getFirestore(this, 'vote', this.times)
@@ -122,7 +123,6 @@ export default {
     let timestamp = await this.$getFirestore(this, 'timestamp', this.times)
     if (timestamp === null) {
       const now = new Date()
-      now.setDate(now.getDate() - 1)
       const newData = {
         times: this.times,
         twitter_id_str: this.twitterIdStr,
@@ -136,11 +136,16 @@ export default {
       const newData = {
         times: this.times,
         twitter_id_str: this.twitterIdStr,
-        number: 0
+        number: 10
       }
       ticketData = await initialize(this, 'ticket', newData)
+      firstFlag = true
     }
     this.ticketNum = ticketData ? ticketData.number : 0
+    if (firstFlag) {
+      const redirectUri = this.$router.fullPath
+      this.$router.push(`/login_bonus?redirect_uri=${redirectUri}`)
+    }
   },
   methods: {
     handleVote () {
