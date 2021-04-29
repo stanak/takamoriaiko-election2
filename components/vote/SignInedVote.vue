@@ -15,13 +15,13 @@
         </div>
       </el-card>
     </div>
-    <div v-if="isLimit(vote)" class="position-center-text">
+    <div v-if="isLimit" class="position-center-text">
       投票上限です。<br>ログインボーナスで投票券を増やすか、リセットで再び投票できます。
     </div>
     <div v-else class="position-center-text">
       <el-form :inline="true">
         <el-form-item label="投票券枚数">
-          <el-input-number v-model="voteNum" :min="1" :max="remainingTicketNum(vote)" />
+          <el-input-number v-model="voteNum" :min="1" :max="remainingTicketNum" />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" round class="button-design" @click="handleVote()">
@@ -31,7 +31,7 @@
       </el-form>
     </div>
     <div class="position-center-text">
-      残り持ち票{{ remainingTicketNum(vote) }}
+      残り持ち票{{ remainingTicketNum }}
     </div>
     <div class="position-center-text">
       <a :href="twitterShareURL()" target="_blank" rel="noopener noreferrer">
@@ -45,6 +45,13 @@
         投票リセット
       </el-button>
     </div>
+    <div class="top-padding position-center-text">
+      <nuxt-link :to="`/vote/${times}`">
+        <el-button round>
+          投票候補一覧へ戻る
+        </el-button>
+      </nuxt-link>
+    </div>
   </div>
 </template>
 
@@ -54,6 +61,19 @@ import { mapGetters } from 'vuex'
 
 const countVote = (obj) => {
   Object.entries(obj).reduce((a, b) => { return a + b[1] }, 0)
+}
+
+const initialize = async (app, collection, newObj) => {
+  let data
+  try {
+    data = await app.$addFirestore(collection, newObj)
+  } catch (e) {
+    await app.$message({
+      type: 'danger',
+      message: `初期化失敗。このページを開き直してください。${e}`
+    })
+  }
+  return data
 }
 
 export default {
@@ -73,28 +93,53 @@ export default {
       twitterIdStr: 'user/twitterIdStr'
     }),
     remainingTicketNum () {
-      return function (vote) {
-        const countVote = Object.entries(vote).reduce((a, b) => { return a + b[1] }, 0)
-        return this.ticketNum - countVote
-      }
+      const countVote = Object.entries(this.vote).reduce((a, b) => { return a + b[1] }, 0)
+      return this.ticketNum - countVote
     },
     isLimit () {
-      return function (vote) {
-        const countVote = Object.entries(vote).reduce((a, b) => { return a + b[1] }, 0)
-        return this.ticketNum <= countVote
-      }
+      const countVote = Object.entries(this.vote).reduce((a, b) => { return a + b[1] }, 0)
+      return this.ticketNum <= countVote
     }
   },
-  async created () {
+  created () {
     this.epName = this.$route.params.epName
+  },
+  async mounted () {
     this.times = Number(this.$route.params.times)
 
-    const vote = await this.$getFirestore(this, 'vote', this.times)
+    let vote = await this.$getFirestore(this, 'vote', this.times)
     if (vote === null) {
-      await this.initializeVote()
+      const newVote = {}
+      const newData = {
+        times: this.times,
+        twitter_id_str: this.twitterIdStr,
+        targets: newVote
+      }
+      vote = await initialize(this, 'vote', newData)
     }
     this.vote = vote ? vote.targets : {}
-    const ticketData = await this.$getFirestore(this, 'ticket', this.times)
+
+    let timestamp = await this.$getFirestore(this, 'timestamp', this.times)
+    if (timestamp === null) {
+      const now = new Date()
+      now.setDate(now.getDate() - 1)
+      const newData = {
+        times: this.times,
+        twitter_id_str: this.twitterIdStr,
+        last_time: now
+      }
+      timestamp = await initialize(this, 'timestamp', newData)
+    }
+
+    let ticketData = await this.$getFirestore(this, 'ticket', this.times)
+    if (ticketData === null) {
+      const newData = {
+        times: this.times,
+        twitter_id_str: this.twitterIdStr,
+        number: 0
+      }
+      ticketData = await initialize(this, 'ticket', newData)
+    }
     this.ticketNum = ticketData ? ticketData.number : 0
   },
   methods: {
@@ -178,35 +223,8 @@ export default {
         })
       })
     },
-    async initializeVote () {
-      const newVote = { [this.epName]: 0 }
-
-      const newData = {
-        times: this.times,
-        twitter_id_str: this.$store.getters['user/twitterIdStr'],
-        targets: newVote
-      }
-      try {
-        await this.$addFirestore('vote', newData)
-        this.vote = newVote
-      } catch (e) {
-        await this.$message({
-          type: 'danger',
-          message: `初期投票失敗${e}`
-        })
-      }
-    },
     async clearVote () {
       const data = await this.$getFirestore(this, 'vote', this.times)
-      if (!data) {
-        const newVote = {
-          times: this.times,
-          twitter_id_str: this.$store.getters['user/twitterIdStr'],
-          targets: {}
-        }
-        await this.$addFirestore('vote', newVote)
-        return
-      }
       const targets = data.targets
       targets[this.epName] = 0
       const updated = await this.$updateFirestore(this, 'vote', this.times, { targets })

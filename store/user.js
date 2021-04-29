@@ -1,16 +1,4 @@
 
-const loginBonus = async (app, twitterIdStr, redirect) => {
-  if (!twitterIdStr) {
-    return
-  }
-  const router = app.$router
-  if (await app.$checkLoginBonus(twitterIdStr)) {
-    await app.$increaseVotingTicket(twitterIdStr)
-    const redirectUri = router.fullPath
-    router.push(`/login_bonus?redirect_uri=${redirectUri}`)
-  }
-}
-
 export const state = () => ({
   isSignedIn: false,
   twitterIdStr: null,
@@ -45,16 +33,15 @@ export const actions = {
       if (userInfo.user) {
         const twitterIdStr = userInfo.additionalUserInfo.profile.id_str
         const twitterScreenName = userInfo.additionalUserInfo.profile.screen_name
-        await loginBonus(this, twitterIdStr)
         commit('setSignInState', true)
         commit('setTwitterIdStr', twitterIdStr)
         commit('setTwitterScreenName', twitterScreenName)
         return
       }
       if (user) {
-        commit('setSignInState', true)
         const twitterIdStr = user.providerData[0].uid
-        await loginBonus(this, twitterIdStr)
+        commit('setSignInState', true)
+        commit('setTwitterIdStr', twitterIdStr)
       }
     })
   }

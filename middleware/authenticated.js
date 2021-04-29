@@ -4,5 +4,11 @@ export default async (context) => {
   if (vote === '_vote') {
     redirect(`/vote/${times}/${epName}`)
   }
+  if (await context.$checkLoginBonus(store)) {
+    await context.$increaseVotingTicket(store)
+    const redirectUri = route.fullPath
+    console.log('test')
+    redirect(`/login_bonus?redirect_uri=${redirectUri}`)
+  }
   await store.dispatch('user/onAuth')
 }

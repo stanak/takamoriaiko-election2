@@ -28,21 +28,19 @@ const twitterSignOut = async () => {
   await Firebase.auth().signOut()
 }
 
-const checkLoginBonus = async (twitterIdStr) => {
+const checkLoginBonus = async (store) => {
+  const twitterIdStr = store.getters['user/twitterIdStr']
+  if (!twitterIdStr) {
+    return
+  }
   const now = new Date()
   const times = setting.times
   const start = setting.schedule[times - 1].start
   const end = setting.schedule[times - 1].end
   const querySnapshot = await Firebase.firestore().collection('timestamp').where('times', '==', times).where('twitter_id_str', '==', twitterIdStr).get()
   const queryNum = querySnapshot.docs.length
-  // 該当なしはデータ作成
   if (queryNum === 0) {
-    await Firebase.firestore().collection('timestamp').add({
-      times,
-      twitter_id_str: twitterIdStr,
-      last_time: now
-    })
-    return true
+    return
   }
   // 該当あればlast_timeをnowに更新
   const doc = querySnapshot.docs[0]
@@ -51,22 +49,21 @@ const checkLoginBonus = async (twitterIdStr) => {
   // 今が選挙期間内で日が変わってたらtrue, それ以外false
   if (start < now && now < end) {
     const isAnotherDay = ((now.getDate() - lastTime.getDate()) !== 0) || ((now.getMonth() - lastTime.getMonth()) !== 0)
+    console.log(isAnotherDay)
     return isAnotherDay
   }
   return false
 }
 
-const increaseVotingTicket = async (twitterIdStr) => {
+const increaseVotingTicket = async (store) => {
+  const twitterIdStr = store.getters['user/twitterIdStr']
+  if (!twitterIdStr) {
+    return
+  }
   const times = setting.times
   await Firebase.firestore().collection('ticket').where('times', '==', times).where('twitter_id_str', '==', twitterIdStr).get().then(async (querySnapshot) => {
     const queryNum = querySnapshot.docs.length
-    // 該当なしはデータ作成
     if (queryNum === 0) {
-      await Firebase.firestore().collection('ticket').add({
-        times,
-        twitter_id_str: twitterIdStr,
-        number: 10
-      })
       return
     }
     const doc = querySnapshot.docs[0]
