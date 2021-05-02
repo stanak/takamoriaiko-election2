@@ -31,7 +31,11 @@
         </el-button>
       </nuxt-link>
     </div>
-
+    <div class="top-padding position-center-text">
+      <a :href="getWikiURL(epName)">
+        詳しく知る(wikiリンク)
+      </a>
+    </div>
   </div>
 </template>
 
@@ -67,6 +71,10 @@ export default {
     ]),
     async doSignIn () {
       await this.signIn()
+    },
+    getWikiURL (epName) {
+      const episodeData = episode.episodes.filter((ep) => { return ep.name === epName })
+      return episodeData.pop().wiki
     }
   }
 }

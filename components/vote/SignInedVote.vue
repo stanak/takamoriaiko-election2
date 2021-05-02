@@ -52,6 +52,11 @@
         </el-button>
       </nuxt-link>
     </div>
+    <div class="top-padding position-center-text">
+      <a :href="getWikiURL(epName)" target="_blank" rel="noopener noreferrer">
+        このエピソードについて詳しく知る
+      </a>
+    </div>
   </div>
 </template>
 
@@ -60,7 +65,7 @@ import episode from '@/assets/javascripts/episode'
 import { mapGetters } from 'vuex'
 
 const countVote = (obj) => {
-  Object.entries(obj).reduce((a, b) => { return a + b[1] }, 0)
+  return Object.entries(obj).reduce((a, b) => { return a + b[1] }, 0)
 }
 
 const initialize = async (app, collection, newObj) => {
@@ -148,8 +153,12 @@ export default {
     }
   },
   methods: {
+    getWikiURL (epName) {
+      const episodeData = episode.episodes.filter((ep) => { return ep.name === epName })
+      return episodeData[0].wiki
+    },
     handleVote () {
-      this.$confirm(`${this.episodesENJP[this.epName]}に${this.voteNum}票投票しますか？`, 'Warning', {
+      this.$confirm(`${this.episodesENJP[this.epName]}に${this.voteNum}票投票しますか？`, '投票確認', {
         confirmButtonText: 'OK',
         cancelButtonText: 'No',
         type: 'info',
@@ -179,6 +188,7 @@ export default {
       const newVote = voteData.targets
       const ticketData = await this.$getFirestore(this, 'ticket', this.times)
       const ticketNum = ticketData.number
+      this.vote = newVote
       if (!this.voteNum || (typeof this.voteNum) !== 'number') {
         throw new Error('入力値が不正です')
       }
@@ -205,7 +215,7 @@ export default {
       }
     },
     handleClearVote () {
-      this.$confirm(`${this.episodesENJP[this.epName]}の投票をリセットしますか？`, 'Warning', {
+      this.$confirm(`${this.episodesENJP[this.epName]}の投票をリセットしますか？`, '投票確認', {
         confirmButtonText: 'Yes',
         cancelButtonText: 'No',
         type: 'warning',
