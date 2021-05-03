@@ -15,14 +15,19 @@
       </el-menu-item>
       <el-submenu index="2">
         <template slot="title">
-          メニュー
+          コンテンツ
         </template>
         <el-menu-item index="2-1">
           <nuxt-link to="/">
             TOP
           </nuxt-link>
         </el-menu-item>
-        <el-menu-item v-for="index in Array.from(Array(times * 2), (v, k) => k)" :key="index" :index="`2-${index+2}`">
+        <el-menu-item index="2-2">
+          <nuxt-link to="/gallery">
+            ギャラリー
+          </nuxt-link>
+        </el-menu-item>
+        <el-menu-item v-for="index in Array.from(Array(times * 2), (v, k) => k)" :key="index" :index="`2-${index+3}`">
           <nuxt-link :to="((index + 1) % 2) ? toVoteList(index / 2 + 1) : toResult(index / 2 + 1)">
             {{ `第${parseInt((index / 2)+1)}回${((index % 2) == 0) ? "投票" : "結果"}` }}
           </nuxt-link>
