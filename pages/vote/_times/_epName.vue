@@ -1,46 +1,52 @@
 <template>
-  <div v-if="isSignedIn">
-    <SignInedVote />
+  <div v-if="inTerm()">
+    <div v-if="isSignedIn">
+      <SignInedVote />
+    </div>
+    <div v-else>
+      <div class="position-center">
+        <el-card :body-style="{ padding: '0px' }" class="w-xs overflow-hidden">
+          <el-image
+            style="height: 16rem; width: 100%;"
+            :src="`/${epName}.jpg`"
+            fit="contain"
+          />
+          <div class="card-text-interval">
+            <div class="card-text">
+              {{ episodesENJP[epName] }}
+            </div>
+          </div>
+        </el-card>
+      </div>
+
+      <div class="position-center-text">
+        <el-button type="primary" round class="button-design" @click="doSignIn">
+          ログインして投票
+        </el-button>
+        </nuxt-link>
+      </div>
+      <div class="top-padding position-center-text">
+        <nuxt-link :to="`/vote/${times}`">
+          <el-button round>
+            投票候補一覧へ戻る
+          </el-button>
+        </nuxt-link>
+      </div>
+      <div class="top-padding position-center-text">
+        <a :href="getWikiURL(epName)">
+          詳しく知る(wikiリンク)
+        </a>
+      </div>
+    </div>
   </div>
   <div v-else>
-    <div class="position-center">
-      <el-card :body-style="{ padding: '0px' }" class="w-xs overflow-hidden">
-        <el-image
-          style="height: 16rem; width: 100%;"
-          :src="`/${epName}.jpg`"
-          fit="contain"
-        />
-        <div class="card-text-interval">
-          <div class="card-text">
-            {{ episodesENJP[epName] }}
-          </div>
-        </div>
-      </el-card>
-    </div>
-
-    <div class="position-center-text">
-      <el-button type="primary" round class="button-design" @click="doSignIn">
-        ログインして投票
-      </el-button>
-      </nuxt-link>
-    </div>
-    <div class="top-padding position-center-text">
-      <nuxt-link :to="`/vote/${times}`">
-        <el-button round>
-          投票候補一覧へ戻る
-        </el-button>
-      </nuxt-link>
-    </div>
-    <div class="top-padding position-center-text">
-      <a :href="getWikiURL(epName)">
-        詳しく知る(wikiリンク)
-      </a>
-    </div>
+    第{{ times }}回藍子ちゃん総選挙は終了しました。
   </div>
 </template>
 
 <script>
 import episode from '@/assets/javascripts/episode'
+import settings from '@/assets/javascripts/settings.js'
 import { mapGetters, mapActions } from 'vuex'
 
 // 全取得チケット数から全投票済みチケット数の合算を引いた残りチケット数
@@ -53,11 +59,15 @@ export default {
     const times = Number(params.times)
     const epName = params.epName
     const episodesENJP = episode.episodesENJP
+    const start = settings.schedule[times - 1].start
+    const end = settings.schedule[times - 1].end
 
     return {
       times,
       epName,
-      episodesENJP
+      episodesENJP,
+      start,
+      end
     }
   },
   computed: {
@@ -75,6 +85,10 @@ export default {
     getWikiURL (epName) {
       const episodeData = episode.episodes.filter((ep) => { return ep.name === epName })
       return episodeData.pop().wiki
+    },
+    inTerm () {
+      const now = new Date()
+      return this.start < now && now < this.end
     }
   }
 }
