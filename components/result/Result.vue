@@ -5,8 +5,7 @@
       開催期間 {{ inTermMessage() }}
     </div>
     <br>
-    このときは一人5票のみが与えられ、1エピソードには1票まで、最大5エピソード投票できました。<br>
-    総投票数{{ allVoteList.length }}票でした。みなさん投票ありがとうございました♪
+    総投票数{{ getVoteNum() }}票でした。みなさん投票ありがとうございました♪
 
     <div class="text-center">
       <Podium :ranking="ranking" :counter="counter" :sorted-episodes="restrictedSortedEpisodes" />
@@ -39,13 +38,19 @@
 import episode from '@/assets/javascripts/episode'
 import settings from '@/assets/javascripts/settings'
 
-// [epName1, epName2, epName1, ...]
-const getAllVote = async (app, times) => {
-  let ret = []
+const getCounter = async (app, times, restrictedEpisodes) => {
+  const ret = {}
+  for (const epName of restrictedEpisodes) {
+    ret[epName] = 0
+  }
   try {
-    const querySnapshot = await app.$firebase.firestore().collection('election').where('times', '==', times).get()
+    const querySnapshot = await app.$firebase.firestore().collection('vote').where('times', '==', times).get()
     querySnapshot.forEach((doc) => {
-      ret = ret.concat(doc.data().voted)
+      const vote = doc.data().targets
+
+      for (const epName of Object.keys(vote)) {
+        ret[epName] += vote[epName]
+      }
     })
   } catch (error) {
     console.log(error)
@@ -65,18 +70,6 @@ const getRestrictedSortedEpisodes = (restrictedEpisodes, counter) => {
   return restrictedEpisodes.sort((a, b) => {
     return counter[b] - counter[a]
   })
-}
-
-// { epName: 10 }
-const getCounter = (restrictedEpisodes, allVoteList) => {
-  const counter = {}
-  for (const ep of restrictedEpisodes) {
-    counter[ep] = 0
-  }
-  for (const ep of allVoteList) {
-    counter[ep] += 1
-  }
-  return counter
 }
 
 // { epName: 1 }
@@ -109,8 +102,7 @@ export default {
   },
   data () {
     return {
-      times: 1,
-      allVoteList: [],
+      times: settings.times,
       counter: {},
       ranking: {},
       restrictedSortedEpisodes: [],
@@ -120,21 +112,15 @@ export default {
     }
   },
   async created () {
-    this.time = 1 // 固定値
     this.start = settings.schedule[this.times - 1].start
     this.end = settings.schedule[this.times - 1].end
     const episodes = episode.episodes
     const restrictedEpisodes = getRestrictedEpisodes(episodes, this.end)
-    this.allVoteList = await getAllVote(this, this.times)
-    this.counter = getCounter(restrictedEpisodes, this.allVoteList)
+    this.counter = await getCounter(this, this.times, restrictedEpisodes)
     this.restrictedSortedEpisodes = getRestrictedSortedEpisodes(restrictedEpisodes, this.counter)
     this.ranking = getRanking(this.restrictedSortedEpisodes, this.counter)
   },
   methods: {
-    showDate () {
-      const date = settings.schedule[this.times - 1].end
-      return date.getFullYear() + '年' + (date.getMonth() + 1) + '月' + date.getDate() + '日' + date.getHours() + '時'
-    },
     inTermMessage () {
       const sYear = this.start.getFullYear()
       const sMonth = this.start.getMonth() + 1
@@ -145,6 +131,9 @@ export default {
       const eDate = this.end.getDate()
       const eHour = this.end.getHours()
       return `${sYear}年${sMonth}月${sDate}日${sHour}時～${eYear}年${eMonth}月${eDate}日${eHour}時`
+    },
+    getVoteNum () {
+      return Object.entries(this.counter).reduce((a, b) => { return a + b[1] }, 0)
     }
   }
 }

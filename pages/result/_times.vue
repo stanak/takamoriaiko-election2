@@ -1,10 +1,24 @@
 <template>
   <div v-if="times == 1">
-    <LegacyResult />
+    <div v-if="beforeTerm()">
+      開催日時:{{ inTermMessage() }}
+    </div>
+    <div v-if="inTerm()">
+      {{ showDate() }}に発表！好きな藍子ちゃんに奮ってご投票ください！
+    </div>
+    <div v-if="afterTerm()">
+      <LegacyResult />
+    </div>
   </div>
   <div v-else>
-    <div v-if="inTerm()">
+    <div v-if="beforeTerm()">
       開催日時:{{ inTermMessage() }}
+    </div>
+    <div v-else-if="inTerm()">
+      {{ showDate() }}に発表！好きな藍子ちゃんに奮ってご投票ください！
+    </div>
+    <div v-else-if="afterTerm()">
+      <Result />
     </div>
   </div>
 </template>
@@ -14,7 +28,8 @@ import settings from '@/assets/javascripts/settings.js'
 
 export default {
   components: {
-    LegacyResult: () => import('@/components/result/LegacyResult')
+    LegacyResult: () => import('@/components/result/LegacyResult'),
+    Result: () => import('@/components/result/Result')
   },
   asyncData ({ app, params }) {
     const times = params.times
@@ -27,9 +42,21 @@ export default {
     }
   },
   methods: {
+    beforeTerm () {
+      const now = new Date()
+      return this.start > now
+    },
     inTerm () {
       const now = new Date()
       return this.start < now && now < this.end
+    },
+    afterTerm () {
+      const now = new Date()
+      return now > this.end
+    },
+    showDate () {
+      const date = settings.schedule[this.times - 1].end
+      return date.getFullYear() + '年' + (date.getMonth() + 1) + '月' + date.getDate() + '日' + date.getHours() + '時'
     },
     inTermMessage () {
       const sYear = this.start.getFullYear()
