@@ -10,6 +10,9 @@
         <el-button class="guide-button" type="primary" round>投票ページへ</el-button>
       </nuxt-link>
       <el-button class="guide-button" type="primary" disabled round>ダイマ一覧・作成へ</el-button>
+      <nuxt-link to="/gallery">
+        <el-button class="guide-button" type="primary" round>ギャラリー</el-button>
+      </nuxt-link>
     </div>
     <p>THE iDOLM@STER: Cinderella Girlsに登場するキャラクター高森藍子のファンサイトです。本家総選挙の時期に、高森藍子オンリーの総選挙を行います。</p>
     <p>投票結果の閲覧は誰でも可能で、投票に参加するにはTwitterアカウントが必要です。読み取り権限のみで、勝手にツイートしたりすることはありません。</p>
@@ -37,6 +40,9 @@
     <h2>更新</h2>
     <ul>
       2021
+      <li>
+        5/3: 結果ページの作成とギャラリーの追加を行いました。
+      </li>
       <li>
         4/28: 全面的にソースコードを書き換えてリニューアルしました。ダイマ機能は一時凍結。票の取得方法が毎日のログインで行われるようになりました。
       </li>
