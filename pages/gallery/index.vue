@@ -2,25 +2,23 @@
   <div>
     藍子ちゃんエピソードのギャラリーです。スライダーをいじってカードの大きさを変えたり、ドラッグアンドドロップで順番を入れ替える事ができます。
     <div class="block">
-      <span class="demonstration">カード幅</span>
-      <el-slider v-model="width" @change="$redrawVueMasonry()" />
-    </div>
-    <div class="block">
-      <span class="demonstration">カード高さ</span>
-      <el-slider v-model="height" @change="$redrawVueMasonry()" />
+      <span class="demonstration">スケール</span>
+      <el-slider v-model="scale" @change="$redrawVueMasonry()" />
     </div>
     <div v-masonry transition-duration="0.3s" item-selector=".item">
-      <draggable tag="span" @end="$redrawVueMasonry()">
-        <span v-masonry-tile class="item" v-for="(jpName, epName, index) in episodesENJP" :key="index">
-          <div class="card-interval">
-            <el-card ref="card" :body-style="{ padding: '0px', height: height + 'rem', width: width + 'rem' }" class="card relative">
-              <el-image
-                style="height: 100%; width: 100%;"
-                :src="`/${epName}.jpg`"
-                fit="contain" />
-            </el-card>
-          </div>
-        </span>
+      <draggable v-model="episodeData" draggable=".item" @end="$redrawVueMasonry()">
+        <el-card
+          v-masonry-tile
+          class="item"
+          :body-style="{ padding: 0, height: 800 * scale * 0.01 + 'px', width: 'auto', overflow: 'hidden'}"
+          v-for="(data, index) in episodeData"
+          :key="index"
+          >
+            <el-image
+              :src="data.src"
+              :style="scaledStyle(scale, data.originWidth, data.originHeight)"
+            />
+        </el-card>
       </draggable>
     </div>
   </div>
@@ -30,18 +28,40 @@
 import episode from '@/assets/javascripts/episode'
 import draggable from 'vuedraggable'
 
+const getEpisodeData = () => {
+  const episodes = episode.episodes
+  const ret = []
+  for (const data of episodes) {
+    const elem = {}
+    elem.name = data.name
+    elem.src = `/${elem.name}.jpg`
+    const img = new Image()
+    img.src = elem.src
+    elem.originWidth = img.width
+    elem.originHeight = img.height
+    ret.push(elem)
+  }
+  return ret
+}
+
 export default {
   components: {
     draggable
   },
   asyncData ({ app, params }) {
-    const episodesENJP = episode.episodesENJP
-    const width = 24
-    const height = 24
+    const scale = 20
+    const episodeData = getEpisodeData()
     return {
-      episodesENJP,
-      width,
-      height
+      scale,
+      episodeData
+    }
+  },
+  methods: {
+    scaledStyle (scale, originWidth, originHeight) {
+      return {
+        width: originWidth * scale * 0.01 + 'px',
+        height: originHeight * scale * 0.01 + 'px'
+      }
     }
   }
 }

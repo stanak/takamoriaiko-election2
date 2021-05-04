@@ -1,4 +1,3 @@
-
 export const state = () => ({
   isSignedIn: false,
   twitterIdStr: null,
