@@ -8,16 +8,16 @@
     <div v-masonry transition-duration="0.3s" item-selector=".item">
       <draggable v-model="episodeData" draggable=".item" @end="$redrawVueMasonry()">
         <el-card
-          v-masonry-tile
-          class="item"
-          :body-style="{ padding: 0, height: 800 * scale * 0.01 + 'px', width: 'auto', overflow: 'hidden'}"
           v-for="(data, index) in episodeData"
           :key="index"
-          >
-            <el-image
-              :src="data.src"
-              :style="scaledStyle(scale, data.originWidth, data.originHeight)"
-            />
+          v-masonry-tile
+          class="item"
+          :body-style="{ padding: 0, height: 824 * scale * 0.01 + 'px', width: 'auto', overflow: 'hidden'}"
+        >
+          <el-image
+            :src="data.src"
+            :style="scaledStyle(scale, data.originWidth, data.originHeight)"
+          />
         </el-card>
       </draggable>
     </div>
@@ -28,35 +28,37 @@
 import episode from '@/assets/javascripts/episode'
 import draggable from 'vuedraggable'
 
-const getEpisodeData = () => {
-  const episodes = episode.episodes
-  const ret = []
-  for (const data of episodes) {
-    const elem = {}
-    elem.name = data.name
-    elem.src = `/${elem.name}.jpg`
-    const img = new Image()
-    img.src = elem.src
-    elem.originWidth = img.width
-    elem.originHeight = img.height
-    ret.push(elem)
-  }
-  return ret
-}
-
 export default {
   components: {
     draggable
   },
   asyncData ({ app, params }) {
     const scale = 20
-    const episodeData = getEpisodeData()
     return {
       scale,
-      episodeData
+      episodeData: []
     }
   },
+  created () {
+    this.getEpisodeData()
+    this.$redrawVueMasonry()
+  },
   methods: {
+    getEpisodeData () {
+      const episodes = episode.episodes
+      for (const data of episodes) {
+        const img = new Image()
+        img.src = `/${data.name}.jpg`
+        img.onload = () => {
+          const elem = {}
+          elem.name = data.name
+          elem.src = `/${elem.name}.jpg`
+          this.episodeData.push(elem)
+          elem.originWidth = img.width
+          elem.originHeight = img.height
+        }
+      }
+    },
     scaledStyle (scale, originWidth, originHeight) {
       return {
         width: originWidth * scale * 0.01 + 'px',
