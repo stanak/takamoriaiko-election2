@@ -78,7 +78,9 @@ const OGP_IMG_HEIGHT = 1080
 const func = functions.https.onRequest((req, res) => {
   console.log(req.path)
   const [, , times, epName] = req.path.split('/')
-  console.log('times', times)
+  if (epName === undefined) {
+    return
+  }
   const html = createHtml(epName, times)
   res.set('Cache-Control', 'public, max-age=600, s-maxage=600')
   res.status(200).end(html)
