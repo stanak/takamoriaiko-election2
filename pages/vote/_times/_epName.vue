@@ -40,7 +40,9 @@
     </div>
   </div>
   <div v-else>
-    第{{ times }}回藍子ちゃん総選挙は終了しました。
+    藍子ちゃん総選挙20{{ times - 1 + 20 }}は終了しました。<br>
+    投票ありがとうございました！
+    結果は<nuxt-link :to="`/result/${times}`">こちらをクリック</nuxt-link>で確認できます。
   </div>
 </template>
 

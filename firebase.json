@@ -22,6 +22,10 @@
         "function": "voteshare"
       },
       {
+        "source": "/_vote/**/**",
+        "destination": "/index.html"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
